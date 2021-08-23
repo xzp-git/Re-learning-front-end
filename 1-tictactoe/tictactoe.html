@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TicTacToe</title>
+  <style>
+    .cell{
+      width: 100px;
+      height: 100px;
+      background-color: lightgreen;
+      display: inline-block;
+      border: solid 1px white;
+      vertical-align: middle;
+
+      line-height: 100px;
+      font-size: 50px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="board"></div>
+
+  <script>
+    let patten = [
+      0,0,0,
+      0,0,0,
+      0,0,0,
+    ]
+    let color = 1
+    function show(patten) {
+      let board = document.getElementById('board')
+      board.innerHTML = ""
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          let cell = document.createElement('div')
+          cell.classList.add('cell')
+          cell.innerText = 
+              patten[i * 3 + j] == 2 ? "❌" :
+              patten[i * 3 + j] == 1 ? "⭕" : ""
+          cell.addEventListener('click',() => userMove(i, j))
+          board.appendChild(cell)
+        }
+        board.appendChild(document.createElement("br"))
+      }
+    }
+
+    function userMove(x, y) {
+      patten[x * 3 + y] = color
+      if (check(patten, color)) {
+        alert(color == 1?"⭕ is winner!":"❌ is winner!")
+      }
+      color = 3 - color
+      
+      console.log(bestChoice(patten, color))
+      // if (willWin(patten, color)) {
+      //   console.log(color == 1?"⭕ will win!":"❌ will win!")
+      // }
+      show(patten)
+      computerMove(patten)
+    }
+
+    function computerMove(patten) {
+      let choice = bestChoice(patten,color)
+      if (choice.point) {
+        patten[choice.point[0]*3 + choice.point[1]] = color
+      }
+      if (check(patten, color)) {
+        alert(color == 1?"⭕ is winner!":"❌ is winner!")
+      }
+      color = 3 - color
+      show(patten)
+    }
+
+    function clone(patten) {
+      return Object.create(patten)
+    }
+
+    function check(patten, color) {
+        for(let i = 0; i < 3; i++){
+          let win = true
+          for(let j = 0; j < 3; j++){
+            if (patten[i * 3 + j] !== color) {
+              win = false
+            }
+          }
+          if (win) return win
+        }
+        for(let i = 0; i < 3; i++){
+          let win = true
+          for(let j = 0; j < 3; j++){
+            if (patten[j * 3 + i] !== color) {
+              win = false
+            }
+          }
+          if (win) return win
+        }
+      {
+        let win = true
+        for(let i = 0; i < 3; i++){
+            if (patten[i * 3 + 2 -i] !== color) {
+              win = false
+            }
+        }
+        if (win) return win
+      }
+      {
+        let win = true
+        for(let i = 0; i < 3; i++){
+            if (patten[ i * 3 + i] !== color) {
+              win = false
+            }
+        }
+        if (win) return win
+      }
+      return false
+    }
+    
+    function willWin(patten, color) {
+      for(let i = 0; i < 3; i++){
+        for(let j = 0; j < 3; j++){
+          if (patten[i * 3 + j] !== 0) continue
+          let tmp = clone(patten)
+          tmp[i * 3 + j] = color
+          if (check(tmp,color)) {
+            return [i,j]
+          }
+        }
+      }
+      return null
+    }
+    
+    function bestChoice(patten, color) {
+      let point =  willWin(patten,color)
+      if (point) {
+        return{
+          point:point,
+          result:1
+        }
+      }
+      let result = -1
+      
+      outer:for (let i = 0; i < 3; i++) {
+        for(let j = 0; j < 3; j++){
+          if(patten[i*3+j] !== 0) continue
+          let tmp = clone(patten)
+          tmp[i * 3 + j] = color
+          let opp = bestChoice(tmp, 3 - color)
+
+          if (-opp.result >= result) {
+            result = -opp.result
+            point = [i, j]
+          }
+          if (result == 1) break outer
+        }
+      }
+      return {
+        point:point,
+        result:point ? result : 0
+      }
+    }
+
+    show(patten)
+    console.log(bestChoice(patten, color))
+  </script>
+</body>
+</html>
