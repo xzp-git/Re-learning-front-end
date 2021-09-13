@@ -82,25 +82,45 @@ const clearTimer = function clearTimer(timer){
 //   }
 // }
 
-const debounce = function debounce(func, wait, immediate){
+// const debounce = function debounce(func, wait, immediate){
   
-  if(typeof func !== 'function') throw new TypeError(`${func} must be a function`)
+//   if(typeof func !== 'function') throw new TypeError(`${func} must be a function`)
+//   if(typeof wait === 'boolean') immediate = wait
+//   if(typeof wait !== 'number') wait = 500
+//   if(typeof immediate !== 'boolean') immediate = false
+  
+//   let timer = null
+
+//   return function operate(...params){
+//     let now = !timer && immediate
+//     timer = clearTimer(timer)
+//     timer = setTimeout(()=> {
+//       timer = clearTimer(timer)
+//       if(!immediate) func.call(this,...params)
+//     },wait)
+//     if(now) func.call(this, ...params)
+//   }
+// }
+
+const debounce = function debounce(func, wait, immediate){
+  if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
   if(typeof wait === 'boolean') immediate = wait
   if(typeof wait !== 'number') wait = 500
   if(typeof immediate !== 'boolean') immediate = false
-  
-  let timer = null
 
+  let timer = null
   return function operate(...params){
-    let now = !timer && immediate
+    
+    let now = !timer && immediate 
     timer = clearTimer(timer)
-    timer = setTimeout(()=> {
+    timer = setTimeout(() => {
       timer = clearTimer(timer)
       if(!immediate) func.call(this,...params)
-    },wait)
-    if(now) func.call(this, ...params)
+    }, wait)
+    if ( now ) func.call(this, ...params) 
   }
 }
+
 
 let btn = document.querySelector(".btn")
 const clickFn = function clickFn(e){
@@ -186,19 +206,42 @@ btn.onclick=debounce(clickFn,1000)
 //   }
 // }
 
-const _throttle = function _throttle(func,wait){
+// const _throttle = function _throttle(func,wait){
+//   if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
+//   if(typeof wait !== 'number') wait = 500
+
+//   let timer = null, previous = 0
+//   return function operate(...params){
+//     let now = +new Date(),
+//         remaining = wait - (now - previous) 
+//     if(remaining <= 0){
+//       func.call(this, ...params)
+//       previous = +new Date()
+//     }else if(!timer){
+//       timer = setTimeout(()=>{
+//         timer = clearTimer(timer)
+//         func.call(this, ...params)
+//         previous = +new Date()
+//       },remaining)
+//     }
+    
+//   }
+// }
+
+const throttle = function throttle(func, wait){
+
   if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
   if(typeof wait !== 'number') wait = 500
 
-  let timer = null, previous = 0
+  let  timer = null, previous = 0
   return function operate(...params){
-    let now = +new Date(),
-        remaining = wait - (now - previous) 
+    let now = +new Date(), 
+        remaining = wait - (now - previous)
+        previous = +new Date()
     if(remaining <= 0){
       func.call(this, ...params)
-      previous = +new Date()
     }else if(!timer){
-      timer = setTimeout(()=>{
+      timer = setTimeout(() => {
         timer = clearTimer(timer)
         func.call(this, ...params)
         previous = +new Date()
@@ -208,7 +251,7 @@ const _throttle = function _throttle(func,wait){
   }
 }
 
-window.onscroll = _throttle(clickFn)
+window.onscroll = throttle(clickFn)
 
 
 
@@ -273,19 +316,36 @@ Dog.prototype.sayName = function () {
 //   return obj
 // }
 
+// const _new = function _new(Ctor, ...params){
+//   if(typeof Ctor !== 'function') throw new TypeError(`${Ctor} is not a constructor`)
+//   let name = Ctor.name,
+//       proto = Ctor.prototype
+//   if(/^(Symbol|BigInt)$/.test(name) || !proto) throw new TypeError(`${Ctor} is not a constructor`)
+
+//   let obj = Object.create(proto)
+
+//   let result = Ctor.call(obj, ...params)
+
+//   if(result !== null && /^(object|function)$/.test(typeof result)) return result
+//   return obj
+// }
+
+
 const _new = function _new(Ctor, ...params){
+
   if(typeof Ctor !== 'function') throw new TypeError(`${Ctor} is not a constructor`)
   let name = Ctor.name,
       proto = Ctor.prototype
   if(/^(Symbol|BigInt)$/.test(name) || !proto) throw new TypeError(`${Ctor} is not a constructor`)
 
-  let obj = Object.create(proto)
+  let obj = Object.create(Ctor.prototype)
 
   let result = Ctor.call(obj, ...params)
 
   if(result !== null && /^(object|function)$/.test(typeof result)) return result
   return obj
 }
+
 
 let sanmao = new Dog('三毛');
 sanmao.sayName();
@@ -358,20 +418,38 @@ sanmao1.bark();
 //   return false
 // }
 
+// const instance_of = function instance_of(obj, Ctor){
+//   if(Ctor == null) throw new TypeError('Right-hand side of instanceof is not an object')
+//   if(typeof Ctor !== 'function') throw new TypeError('Right-hand side of instanceof is not callabel')
+//   if(!Ctor.prototype) throw new TypeError('Function has non-object prototype undefined in instanceof check')
+
+//   if(obj == null || !/^(object|function)$/i.test(typeof obj)) return false
+
+//   if(typeof Ctor[Symbol.hasInstance] === 'function') return Ctor[Symbol.hasInstance](obj)
+
+//   let prototype = Object.getPrototypeOf(obj)
+//   while(prototype){
+//     if(prototype === Ctor.prototype) return true
+//     prototype = Object.getPrototypeOf(prototype)
+//   }
+//   return false
+// }
+
 const instance_of = function instance_of(obj, Ctor){
-  if(Ctor == null) throw new TypeError('Right-hand side of instanceof is not an object')
-  if(typeof Ctor !== 'function') throw new TypeError('Right-hand side of instanceof is not callabel')
-  if(!Ctor.prototype) throw new TypeError('Function has non-object prototype undefined in instanceof check')
+  if(Ctor == null) throw new TypeError('Right-hand side of instanceof is not a object')
+  if(typeof Ctor !== 'function') throw new TypeError('Right-hand side of instanceof is not callable')
+  if(!Ctor.prototype) throw new Error('Function has non-object prototype undefined in instanceof check')
 
   if(obj == null || !/^(object|function)$/i.test(typeof obj)) return false
 
-  if(typeof Ctor[Symbol.hasInstance] === 'function') return Ctor[Symbol.hasInstance](obj)
+  if(typeof Ctor[Symbol.hanInstance] === 'function') return Ctor[Symbol.hasInstance](obj)
 
   let prototype = Object.getPrototypeOf(obj)
   while(prototype){
     if(prototype === Ctor.prototype) return true
     prototype = Object.getPrototypeOf(prototype)
   }
+  return false
 }
 console.log(instance_of(/^$/,Array))
 console.log(instance_of(/^$/,RegExp))
