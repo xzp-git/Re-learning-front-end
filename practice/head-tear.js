@@ -8,6 +8,8 @@
 //   return null
 // }
 
+
+
 /**
  * 
  * @param {*} func 需要防抖的函数
@@ -246,8 +248,7 @@ const throttle = function throttle(func, wait){
         func.call(this, ...params)
         previous = +new Date()
       },remaining)
-    }
-    
+    }    
   }
 }
 
@@ -511,14 +512,25 @@ const curry = function currt(func){
 //   }
 // }
 
-const compose = function compose(...funcs){
+// const compose = function compose(...funcs){
 
+//   let len = funcs.length
+//   if( len === 0 ) return x => x
+//   if( len === 1 ) return funcs[0]
+//   return function operate(x){
+//     return funcs.reduceRight((memo,result) => {
+//       result(memo)
+//     },x)
+//   }
+// }
+
+const compose = function compose(...funcs){
   let len = funcs.length
-  if( len === 0 ) return x => x
-  if( len === 1 ) return funcs[0]
-  return function operate(x){
-    return funcs.reduceRight((memo,result) => {
-      result(memo)
+  if (len === 0) return x => x
+  if (len === 1 ) return funcs[0]
+  return function operate(x) {
+    return funcs.reduceRight((memo, func) => {
+      return func(memo)
     },x)
   }
 }
@@ -642,13 +654,168 @@ console.log(result())
 //   type = reg.exec(Object.prototype.toString.call(obj))[1].toLowerCase() : type = typeof obj 
 //   return type
 // }
-const checkType = function checkType(obj){
-  if (obj == null) return obj +''
-  let reg = /^\[object ([a-zA-Z0-9]+)\]$/i,type = typeof obj
-  type =  /^(object|function)$/i.test(type) ? 
-         reg.exec(Object.prototype.toString.call(obj))[1].toLowerCase() : type
-  return type
-} 
+// const checkType = function checkType(obj){
+//   if (obj == null) return obj +''
+//   let reg = /^\[object ([a-zA-Z0-9]+)\]$/i,type = typeof obj
+//   type =  /^(object|function)$/i.test(type) ? 
+//          reg.exec(Object.prototype.toString.call(obj))[1].toLowerCase() : type
+//   return type
+// } 
 
-console.log(checkType([]))
+// 深浅拷贝
+
+let objClone = {
+  name: 'beijing',
+  age: 77,
+  open: true,
+  0: null,
+  1: undefined,
+  2: Symbol(),
+  arr: ['foo', 'bar'],
+  detail: {
+      address: '北京',
+      phone: '1234567890'
+  },
+  3: /^\d+$/,
+  4: new Date(),
+  5: new Error(),
+  6: 10n,
+  fn: function () {
+      console.log('哈哈');
+  },
+  body:document.body
+};
+const checkType = function checkType(obj) {
+  if (obj == null) return obj + ''
+  let reg = /^\[object ([a-zA-Z0-9]+)\]$/i,
+      type = typeof obj,
+      isObjorFunc = /^(object|function)$/i.test(type)
+  type = isObjorFunc? reg.exec(Object.prototype.toString.call(obj))[1].toLowerCase() : type
+  return type
+}
+console.log(checkType(/^$/))
+console.log(checkType(document.querySelector('button')))
+
+ 
+
+//检测是否是纯粹对象 直属类是Object || Object.create(null)
+const isPlainObject = function isPlainObject(target){
+  let proto,//target的原型
+      Ctor
+  if (!target || Object.prototype.toString.call(target) !== '[object Object]')  return false
+  proto = Object.getPrototypeOf(target)
+  if (!proto) return true
+  Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor
+  let ObjectFunctionString = Function.prototype.toString.call(Object); //"function Object() { [native code] }"
+  return typeof Ctor === "function" && Function.prototype.toString.call(Ctor) === ObjectFunctionString
+}
+
+const isWindow = function isWindow(obj) {
+  return obj != null && obj === obj.window
+}
+
+const isArrayLike = function isArrayLike(obj){
+  if (obj == null) return false
+  if(typeof obj !== 'object') return false
+  let length = !!obj && "length" in obj && obj.length,
+      type = checkType(obj)
+  if (isWindow(obj)) return false //window对象上是有length属性的 记录iframe标签的个数
+  return type === 'array' || length === 0 || typeof length === "number" && length > 0 && (length - 1) in obj
+}
+
+// 迭代数组/类数组/对象
+const each = function each(target, callback) {
+  if(typeof callback !== 'function') callback = Function.prototype
+  let i = 0,//记录循环的次数
+      len,//数组的长度
+      item,//target的每一项
+      keys,//如果target是对象 存放 对象key的列表
+      key;//如果target是对象 对象的某一个key
+  if (isArrayLike(target)) {
+    len = target.length
+    for(; i < len; i++){
+      item = target[i]
+      if (callback.call(target,item, i) === false) break 
+    }
+  } else {
+    keys = Object.keys(target)
+    if (typeof Symbol !== 'undefined') keys = keys.concat(Object.getOwnPropertySymbols(target))
+    for(; i<keys.length; i++){
+      key = keys[i]
+      item = target[key]
+      if ( callback.call(target, item, key) === false) break
+    } 
+  }
+}
+const clone = function clone() {
+  let target = arguments[0],
+      deep = false, //深浅拷贝
+      type, // target 的类型
+      isArray, // target 是否是数组或者类数组
+      isObject, // target 是否是普通对象
+      ctor,// 存放 target的构造函数
+      result, //假如 target是数组或者对象，用来存放深拷贝后的值
+      treated = arguments[arguments.length-1] //为了防止死递归，存放已经处理过的对象
+  // 判断第一个参数是否为 boolean
+  if (typeof target === 'boolean') {
+    if (arguments.length === 1) return target;
+    deep = target
+    target = arguments[1]
+  }
+
+  // 为了防止死递归
+  if (!Array.isArray(treated) || !treated.treated) {
+    treated = []
+    treated.treated = true
+  }
+  if(treated.includes(target)) return target
+  treated.push(target)
+
+  // 特殊值的拷贝
+  type = checkType(target)
+  isArray = isArrayLike(target)
+  isObject = isPlainObject(target)
+  if(target == null) return target
+  ctor = target.constructor
+  // 特殊值拷贝
+  if (/^(regexp|date|error)$/i.test(type)) {
+    if (type === 'error') target = target.message
+    return new ctor(target)
+  }
+  if (/^(function|generatorfunction)$/i.test(type)) {
+    return function proxy(...params){
+      return target.call(this, ...params)
+    }
+  }
+  if (target instanceof HTMLElement) {
+    return document.createElement(target.localName)
+  }
+  // 如果不是数组 也不是对象 返回 自己
+  if (!isArray && !isObject)  return target 
+  
+  // 数组和对象的拷贝
+  result = isArray ? [] : {}
+  each(target, function(val, key){
+    if (deep) {
+      // 深拷贝
+      result[key] = clone(deep,val, treated)
+      return
+    }
+    //浅拷贝
+    result[key] = val
+  })
+  return result
+}
+
+let newObj = clone(true,objClone)
+console.log(newObj);
+
+console.log(newObj.arr === objClone.arr);
+console.log(newObj.detail === objClone.detail);
+console.log(newObj[4] === objClone[4]);
+console.log(newObj[3] === objClone[3]);
+console.log(newObj[5] === objClone[5]);
+console.log(newObj.body === objClone.body);
+console.log(newObj.fn === objClone.fn);
+
 
