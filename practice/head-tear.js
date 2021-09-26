@@ -104,24 +104,53 @@ const clearTimer = function clearTimer(timer){
 //   }
 // }
 
-const debounce = function debounce(func, wait, immediate){
-  if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
+// const debounce = function debounce(func, wait, immediate){
+//   if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
+//   if(typeof wait === 'boolean') immediate = wait
+//   if(typeof wait !== 'number') wait = 500
+//   if(typeof immediate !== 'boolean') immediate = false
+
+//   let timer = null
+//   return function operate(...params){
+    
+//     let now = !timer && immediate 
+//     timer = clearTimer(timer)
+//     timer = setTimeout(() => {
+//       timer = clearTimer(timer)
+//       if(!immediate) func.call(this,...params)
+//     }, wait)
+//     if ( now ) func.call(this, ...params) 
+//   }
+// }
+
+
+const debounce = function debounce(func, wait, immediate) {
+  if (typeof func !== 'function')  throw new TypeError(`${func} is not a function`)
   if(typeof wait === 'boolean') immediate = wait
-  if(typeof wait !== 'number') wait = 500
+  if(typeof wait !== ' number') wait = 500
   if(typeof immediate !== 'boolean') immediate = false
+  
+  const clearTimer = function clearTimer(timer){
+    if (timer) {
+      clearTimeout(timer)
+    }
+    return null
+  }
 
   let timer = null
   return function operate(...params){
-    
-    let now = !timer && immediate 
+    let now = !timer && immediate
     timer = clearTimer(timer)
     timer = setTimeout(() => {
       timer = clearTimer(timer)
-      if(!immediate) func.call(this,...params)
+      //结束边界触发
+      if(!immediate) func.call(this, ...params)
     }, wait)
-    if ( now ) func.call(this, ...params) 
+    //开始边界触发
+    if (now) func.call(this, ...params)
   }
 }
+
 
 
 let btn = document.querySelector(".btn")
@@ -230,25 +259,55 @@ btn.onclick=debounce(clickFn,1000)
 //   }
 // }
 
-const throttle = function throttle(func, wait){
+// const throttle = function throttle(func, wait){
 
+//   if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
+//   if(typeof wait !== 'number') wait = 500
+
+//   let  timer = null, previous = 0
+//   return function operate(...params){
+//     let now = +new Date(), 
+//         remaining = wait - (now - previous)
+//         
+//     if(remaining <= 0){
+//       func.call(this, ...params)
+//       previous = +new Date()
+//     }else if(!timer){
+//       timer = setTimeout(() => {
+//         timer = clearTimer(timer)
+//         func.call(this, ...params)
+//         previous = +new Date()
+//       },remaining)
+//     }    
+//   }
+// }
+
+const throttle = function throttle(func, wait){
   if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
   if(typeof wait !== 'number') wait = 500
 
-  let  timer = null, previous = 0
+  const clearTimer = function clearTimer(tiemr){
+    if (timer) {
+      clearTimeout(timer)
+    }
+    return null
+  }
+
+  let timer = null,
+      previous = 0
   return function operate(...params){
-    let now = +new Date(), 
+    let now = +new Date(),
         remaining = wait - (now - previous)
-        previous = +new Date()
-    if(remaining <= 0){
+    if (remaining <= 0) {
       func.call(this, ...params)
-    }else if(!timer){
+      previous = +new Date()
+    }else if (!timer) {
       timer = setTimeout(() => {
         timer = clearTimer(timer)
         func.call(this, ...params)
         previous = +new Date()
-      },remaining)
-    }    
+      }, remaining)
+    }
   }
 }
 
@@ -332,18 +391,32 @@ Dog.prototype.sayName = function () {
 // }
 
 
-const _new = function _new(Ctor, ...params){
+// const _new = function _new(Ctor, ...params){
 
-  if(typeof Ctor !== 'function') throw new TypeError(`${Ctor} is not a constructor`)
+//   if(typeof Ctor !== 'function') throw new TypeError(`${Ctor} is not a constructor`)
+//   let name = Ctor.name,
+//       proto = Ctor.prototype
+//   if(/^(Symbol|BigInt)$/.test(name) || !proto) throw new TypeError(`${Ctor} is not a constructor`)
+
+//   let obj = Object.create(Ctor.prototype)
+
+//   let result = Ctor.call(obj, ...params)
+
+//   if(result !== null && /^(object|function)$/.test(typeof result)) return result
+//   return obj
+// }
+
+const _new = function _new(Ctor, ...params){
+  if(  typeof Ctor !== 'function') throw new TypeError(`${Ctor} is not a constructor`)
   let name = Ctor.name,
       proto = Ctor.prototype
-  if(/^(Symbol|BigInt)$/.test(name) || !proto) throw new TypeError(`${Ctor} is not a constructor`)
+  if(/^(Symbol|BigInt)$/.test(name) || !proto) throw new TypeError(`${Ctor} is not constructor`)
 
-  let obj = Object.create(Ctor.prototype)
+  let obj = Object.create(proto)
 
   let result = Ctor.call(obj, ...params)
 
-  if(result !== null && /^(object|function)$/.test(typeof result)) return result
+  if (result !== null && /^(object|function)$/.test(typeof result)) return result
   return obj
 }
 
@@ -436,22 +509,40 @@ sanmao1.bark();
 //   return false
 // }
 
-const instance_of = function instance_of(obj, Ctor){
+// const instance_of = function instance_of(obj, Ctor){
+//   if(Ctor == null) throw new TypeError('Right-hand side of instanceof is not a object')
+//   if(typeof Ctor !== 'function') throw new TypeError('Right-hand side of instanceof is not callable')
+//   if(!Ctor.prototype) throw new Error('Function has non-object prototype undefined in instanceof check')
+
+//   if(obj == null || !/^(object|function)$/i.test(typeof obj)) return false
+
+//   if(typeof Ctor[Symbol.hanInstance] === 'function') return Ctor[Symbol.hasInstance](obj)
+
+//   let prototype = Object.getPrototypeOf(obj)
+//   while(prototype){
+//     if(prototype === Ctor.prototype) return true
+//     prototype = Object.getPrototypeOf(prototype)
+//   }
+//   return false
+// }
+
+const instance_of = function instance_of(obj, Ctor) {
   if(Ctor == null) throw new TypeError('Right-hand side of instanceof is not a object')
-  if(typeof Ctor !== 'function') throw new TypeError('Right-hand side of instanceof is not callable')
-  if(!Ctor.prototype) throw new Error('Function has non-object prototype undefined in instanceof check')
+  if (typeof Ctor !== 'function') throw new TypeError('Right-hand side of instanceof is not callable')
+  if (!Ctor.prototype) throw new Error('Function has non-object prototype undefined in instanceof check')
+  
+  if(obj == null || !/^(object|function)$/.test(typeof obj)) return false
 
-  if(obj == null || !/^(object|function)$/i.test(typeof obj)) return false
+  if(typeof Ctor[Symbol.hasInstance] === 'function') return Ctor[Symbol.hasInstance](obj)
 
-  if(typeof Ctor[Symbol.hanInstance] === 'function') return Ctor[Symbol.hasInstance](obj)
-
-  let prototype = Object.getPrototypeOf(obj)
-  while(prototype){
-    if(prototype === Ctor.prototype) return true
-    prototype = Object.getPrototypeOf(prototype)
+  let proto = Object.getPrototypeOf(obj)
+  while (proto) {
+    if(proto === Ctor.prototype) return true
+    proto = Object.getPrototypeOf(proto)
   }
   return false
 }
+
 console.log(instance_of(/^$/,Array))
 console.log(instance_of(/^$/,RegExp))
 // console.log(instance_of(/^$/,() => {}))
@@ -486,16 +577,29 @@ console.log(instance_of(/^$/,RegExp))
 //   }
 // }
 
-const curry = function currt(func){
+// const curry = function currt(func){
   
+//   if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
+//   return function curried(...arg){
+//     if(arg.length < func.length){
+//       return function(...args){
+//         return curried(...arg.concat(args))
+//       }
+//     }
+//     return func.call(this, ...arg)
+//   }
+// }
+
+const curry = function curry(func){
   if(typeof func !== 'function') throw new TypeError(`${func} is not a function`)
-  return function curried(...arg){
-    if(arg.length < func.length){
+
+  return function curried(...params) {
+    if (params.length < func.length) {
       return function(...args){
-        return curried(...arg.concat(args))
+        return curried(...params.concat(args))
       }
     }
-    return func.call(this, ...arg)
+    return func(...params)
   }
 }
 
@@ -524,14 +628,25 @@ const curry = function currt(func){
 //   }
 // }
 
+// const compose = function compose(...funcs){
+//   let len = funcs.length
+//   if (len === 0) return x => x
+//   if (len === 1 ) return funcs[0]
+//   return function operate(x) {
+//     return funcs.reduceRight((memo, func) => {
+//       return func(memo)
+//     },x)
+//   }
+// }
+
 const compose = function compose(...funcs){
   let len = funcs.length
-  if (len === 0) return x => x
-  if (len === 1 ) return funcs[0]
-  return function operate(x) {
+  if(len === 0) x => x
+  if(len === 1) return funcs[0]
+  return function operate(x){
     return funcs.reduceRight((memo, func) => {
       return func(memo)
-    },x)
+    }, x)
   }
 }
 
@@ -685,11 +800,20 @@ let objClone = {
   },
   body:document.body
 };
+// const checkType = function checkType(obj) {
+//   if (obj == null) return obj + ''
+//   let reg = /^\[object ([a-zA-Z0-9]+)\]$/i,
+//       type = typeof obj,
+//       isObjorFunc = /^(object|function)$/i.test(type)
+//   type = isObjorFunc? reg.exec(Object.prototype.toString.call(obj))[1].toLowerCase() : type
+//   return type
+// }
+
 const checkType = function checkType(obj) {
-  if (obj == null) return obj + ''
+  if(obj == null) return obj + ''
   let reg = /^\[object ([a-zA-Z0-9]+)\]$/i,
       type = typeof obj,
-      isObjorFunc = /^(object|function)$/i.test(type)
+      isObjorFunc = /^(object|function)$/.test(type)
   type = isObjorFunc? reg.exec(Object.prototype.toString.call(obj))[1].toLowerCase() : type
   return type
 }
@@ -747,7 +871,7 @@ const each = function each(target, callback) {
     } 
   }
 }
-const clone = function clone() {
+/* const clone = function clone() {
   let target = arguments[0],
       deep = false, //深浅拷贝
       type, // target 的类型
@@ -805,11 +929,63 @@ const clone = function clone() {
     result[key] = val
   })
   return result
+} */
+
+
+const clone = function clone() {
+  let target = arguments[0],
+      deep = false,
+      type,
+      ctor,
+      result,
+      treated = arguments[arguments.length - 1]
+  if (typeof target === 'boolean') {
+    if(arguments.length === 1) return target
+    deep = target
+    target = arguments[1]
+  }
+  //处理特殊值
+  if (!Array.isArray(treated) || !treated.treated) {
+    treated = []
+    treated.treated = true
+  }
+  if (treated.includes(target)) return target
+  target.push(target) 
+  // 确定类型
+  type = checkType(target)
+  if (target == null) return target 
+  ctor = target.constructor
+
+  if (/^(regexp|error|date)$/.test(type)) {
+    if(type === 'error') target = target.message
+    return new ctor(target)
+  }
+  if (/^(function|generatorfunction)$/.test(type)) {
+    return function proxy(...params){
+      return target.call(this, ...params)
+    }
+  }
+  if (target instanceof HTMLElement) {
+    return document.createElement(target.localName)
+  }
+  if(!/^(array|object)$/.test(type)) return target
+  
+  // 数组和对象的拷贝
+  result = type === 'array' ? [] : {}
+  for(let key in target){
+    if (deep) {
+      // 深拷贝
+      result[key] = clone(deep,target[key])
+    }else{
+      result[key] = target[key]
+    }
+  }
+  return result
 }
+
 
 let newObj = clone(true,objClone)
 console.log(newObj);
-
 console.log(newObj.arr === objClone.arr);
 console.log(newObj.detail === objClone.detail);
 console.log(newObj[4] === objClone[4]);
