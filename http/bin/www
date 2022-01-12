@@ -1,0 +1,26 @@
+#! /usr/bin/env node
+const { program} = require("commander")
+const pkg = require("../package.json")
+const config = require('./config')
+
+
+const usages = []
+Object.values(config).forEach(option => {
+  program.option(option.flags,option.descrption,option.default)
+  usages.push(option.usage);
+})
+program.name('xs')
+program.usage('[options]')
+program.version(pkg.version)
+
+program.on('--help', function () {
+  console.log('\r\nExamples:');
+  usages.forEach(usage=>{
+      console.log(`  ${usage}`)
+  })
+})
+program.parse(process.argv);
+ 
+// 通过用户的选项 去启动一个静态服务
+const Server = require('../src/main')
+new Server(program.opts()).start();
