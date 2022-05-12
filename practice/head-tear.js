@@ -321,15 +321,15 @@
 //  * new  
 //  */
 
-// function Dog(name) {
-//   this.name = name;
-// }
-// Dog.prototype.bark = function () {
-//   console.log('wangwang');
-// };
-// Dog.prototype.sayName = function () {
-//   console.log('my name is ' + this.name);
-// };
+function Dog(name) {
+  this.name = name;
+}
+Dog.prototype.bark = function () {
+  console.log('wangwang');
+};
+Dog.prototype.sayName = function () {
+  console.log('my name is ' + this.name);
+};
 
 
 
@@ -391,6 +391,25 @@
 // //   return obj
 // // }
 
+function _new(Ctor, ...args) {
+  if( typeof Ctor !== 'function') throw new TypeError(`the first param must be a function`)
+  let proto = Ctor.prototype
+  let obj = Object.create(proto)
+
+  let result = Ctor.apply(obj, args)
+
+  if(/^(object|function)$/.test(result) && result !== null){
+    return result
+  }
+  return obj
+}
+let sanmao = new Dog('三毛');
+sanmao.sayName();
+sanmao.bark();
+
+let sanmao1 = _new(Dog, '三毛111111111')
+sanmao1.sayName();
+sanmao1.bark();
 
 // // const _new = function _new(Ctor, ...params){
 
@@ -399,7 +418,7 @@
 // //       proto = Ctor.prototype
 // //   if(/^(Symbol|BigInt)$/.test(name) || !proto) throw new TypeError(`${Ctor} is not a constructor`)
 
-// //   let obj = Object.create(Ctor.prototype)
+// //   let obj = Object.crea    te(Ctor.prototype)
 
 // //   let result = Ctor.call(obj, ...params)
 
@@ -422,13 +441,7 @@
 // }
 
 
-// let sanmao = new Dog('三毛');
-// sanmao.sayName();
-// sanmao.bark();
 
-// let sanmao1 = _new(Dog, '三毛111111111')
-// sanmao1.sayName();
-// sanmao1.bark();
 
 
 
@@ -731,6 +744,28 @@
 //   delete context[key]
 //   return result
 // }
+Function.prototype.call = function call(context, ...args) {
+  let ctx = context || window
+  if(!/^(object|function)$/.test(typeof context)) ctx = Object(context)
+  let func = Symbol()
+  ctx[func] = this
+  let result = ctx[func](...args)
+  delete ctx[func]
+  return result
+}
+
+const fn = function fn(x, y) {
+  console.log(this, x, y);
+  return x + y;
+};
+let obj = {
+  name: 'obj'
+};
+
+let result = fn.call('AA', ...[10, 20])
+// let result = fn.bind('AA', 10, 20)
+console.log(result)
+
 
 // Function.prototype.apply = function apply(context, params) {
 //   if (context == null) context = window
@@ -748,6 +783,16 @@
 //     return self.call(context, ...params.concat(args))
 //   }
 // }
+
+
+
+
+function bind(context, ...args) {
+  let self = this
+  return function(...params){
+    return self.call(context,...args.concat(params))
+  }
+}
 
 // // Function.prototype.apply = function apply(context,params){
 // //   if(context == null) context = window
@@ -775,17 +820,7 @@
 // //   }
 // // }
 
-// const fn = function fn(x, y) {
-//   console.log(this, x, y);
-//   return x + y;
-// };
-// let obj = {
-//   name: 'obj'
-// };
 
-// // let result = fn.apply('AA', [10, 20])
-// let result = fn.bind('AA', 10, 20)
-// console.log(result())
 
 
 // // const isEmptyObject = function isEmptyObject(obj){
@@ -1314,9 +1349,9 @@
 // // }
 // // curry1()
 
-let p = new Promise((resolve, reject) => {
-  resolve('成功')
-})
-console.log(p);
+// let p = new Promise((resolve, reject) => {
+//   resolve('成功')
+// })
+// console.log(p);
 
 
